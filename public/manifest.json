@@ -1,0 +1,23 @@
+{
+  "short_name": "FinanzzIA",
+  "name": "FinanzzIA - Gestão Financeira Inteligente",
+  "icons": [
+    {
+      "src": "https://picsum.photos/seed/finance/192/192",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "https://picsum.photos/seed/finance/512/512",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#065f46",
+  "theme_color": "#065f46",
+  "display": "standalone",
+  "scope": "/",
+  "description": "Controle suas finanças com inteligência e simplicidade.",
+  "orientation": "portrait"
+}
