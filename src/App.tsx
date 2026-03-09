@@ -32,36 +32,43 @@ export default function App() {
   });
 
   useEffect(() => {
-    fetchTransactions();
-    fetchPlanning();
+    loadData();
   }, []);
 
-  const fetchPlanning = async () => {
-    const currentMonth = new Date().toISOString().substring(0, 7); // YYYY-MM
+  const loadData = () => {
+    setIsLoading(true);
     try {
-      const response = await fetch(`/api/planning/${currentMonth}`);
-      if (response.ok) {
-        const data = await response.json();
-        setPlanning({ budget_limit: data.budget_limit, savings_goal: data.savings_goal });
+      const savedTransactions = localStorage.getItem('finanzzia_transactions');
+      if (savedTransactions) {
+        setTransactions(JSON.parse(savedTransactions));
+      }
+
+      const currentMonth = new Date().toISOString().substring(0, 7);
+      const savedPlanning = localStorage.getItem(`finanzzia_planning_${currentMonth}`);
+      if (savedPlanning) {
+        setPlanning(JSON.parse(savedPlanning));
       }
     } catch (error) {
-      console.error('Failed to fetch planning:', error);
+      console.error('Failed to load data:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleSavePlanning = async (data: { budget_limit: number; savings_goal: number }) => {
+  const fetchPlanning = () => {
+    const currentMonth = new Date().toISOString().substring(0, 7);
+    const savedPlanning = localStorage.getItem(`finanzzia_planning_${currentMonth}`);
+    if (savedPlanning) {
+      setPlanning(JSON.parse(savedPlanning));
+    }
+  };
+
+  const handleSavePlanning = (data: { budget_limit: number; savings_goal: number }) => {
     const currentMonth = new Date().toISOString().substring(0, 7);
     try {
-      const response = await fetch('/api/planning', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ month: currentMonth, ...data }),
-      });
-      if (response.ok) {
-        const updatedPlan = await response.json();
-        setPlanning({ budget_limit: updatedPlan.budget_limit, savings_goal: updatedPlan.savings_goal });
-        setIsPlanningModalOpen(false);
-      }
+      localStorage.setItem(`finanzzia_planning_${currentMonth}`, JSON.stringify(data));
+      setPlanning(data);
+      setIsPlanningModalOpen(false);
     } catch (error) {
       console.error('Failed to save planning:', error);
     }
@@ -77,72 +84,43 @@ export default function App() {
     }
   }, [isDarkMode]);
 
-  const fetchTransactions = async () => {
-    setIsLoading(true);
-    console.log("Fetching transactions...");
-    try {
-      const response = await fetch('/api/transactions');
-      console.log("Fetch response status:", response.status);
-      if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-      const data = await response.json();
-      console.log("Fetched data:", data);
-      setTransactions(Array.isArray(data) ? data : []);
-    } catch (error) {
-      console.error('Failed to fetch transactions:', error);
-      alert('Erro ao carregar transações. Verifique o console.');
-    } finally {
-      setIsLoading(false);
-    }
+  const fetchTransactions = () => {
+    loadData();
   };
 
-  const handleAddTransaction = async (newTransaction: { description: string; amount: number; type: TransactionType; date: string }) => {
-    console.log("Adding transaction:", newTransaction);
+  const handleAddTransaction = (newTransaction: { description: string; amount: number; type: TransactionType; date: string }) => {
     try {
-      const response = await fetch('/api/transactions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newTransaction),
-      });
-      console.log("Add response status:", response.status);
-      if (response.ok) {
-        fetchTransactions();
-      } else {
-        const errorData = await response.json();
-        console.error("Add transaction failed:", errorData);
-      }
+      const transactionWithId: Transaction = {
+        ...newTransaction,
+        id: Date.now(),
+        created_at: new Date().toISOString()
+      };
+      const updatedTransactions = [transactionWithId, ...transactions];
+      setTransactions(updatedTransactions);
+      localStorage.setItem('finanzzia_transactions', JSON.stringify(updatedTransactions));
     } catch (error) {
       console.error('Failed to add transaction:', error);
     }
   };
 
-  const handleUpdateTransaction = async (id: number, updatedTransaction: { description: string; amount: number; type: TransactionType; date: string }) => {
-    console.log("Updating transaction:", id, updatedTransaction);
+  const handleUpdateTransaction = (id: number, updatedTransaction: { description: string; amount: number; type: TransactionType; date: string }) => {
     try {
-      const response = await fetch(`/api/transactions/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updatedTransaction),
-      });
-      if (response.ok) {
-        setEditingTransaction(null);
-        fetchTransactions();
-      } else {
-        const errorData = await response.json();
-        console.error("Update transaction failed:", errorData);
-      }
+      const updatedTransactions = transactions.map(t => 
+        t.id === id ? { ...t, ...updatedTransaction } : t
+      );
+      setTransactions(updatedTransactions);
+      localStorage.setItem('finanzzia_transactions', JSON.stringify(updatedTransactions));
+      setEditingTransaction(null);
     } catch (error) {
       console.error('Failed to update transaction:', error);
     }
   };
 
-  const handleDeleteTransaction = async (id: number) => {
+  const handleDeleteTransaction = (id: number) => {
     try {
-      const response = await fetch(`/api/transactions/${id}`, {
-        method: 'DELETE',
-      });
-      if (response.ok) {
-        setTransactions(transactions.filter((t) => t.id !== id));
-      }
+      const updatedTransactions = transactions.filter((t) => t.id !== id);
+      setTransactions(updatedTransactions);
+      localStorage.setItem('finanzzia_transactions', JSON.stringify(updatedTransactions));
     } catch (error) {
       console.error('Failed to delete transaction:', error);
     }
@@ -212,19 +190,17 @@ export default function App() {
     alert('Relatório exportado com sucesso!');
   };
 
-  const handleClearData = async () => {
+  const handleClearData = () => {
     try {
-      const response = await fetch('/api/transactions', {
-        method: 'DELETE',
-      });
-      if (response.ok) {
-        setTransactions([]);
-        setIsClearDataModalOpen(false);
-        alert('Todas as informações foram apagadas com sucesso.');
-      }
+      localStorage.removeItem('finanzzia_transactions');
+      const currentMonth = new Date().toISOString().substring(0, 7);
+      localStorage.removeItem(`finanzzia_planning_${currentMonth}`);
+      setTransactions([]);
+      setPlanning({ budget_limit: 0, savings_goal: 0 });
+      setIsClearDataModalOpen(false);
+      alert('Todas as informações foram apagadas com sucesso.');
     } catch (error) {
-      console.error('Failed to clear transactions:', error);
-      alert('Erro ao apagar os dados do servidor.');
+      console.error('Failed to clear data:', error);
     }
   };
 
