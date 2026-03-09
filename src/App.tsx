@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { LayoutDashboard, TrendingUp, TrendingDown, PieChart, Moon, Sun, LogOut, Trash2, Settings, UserCircle } from 'lucide-react';
+import { LayoutDashboard, TrendingUp, TrendingDown, PieChart, Moon, Sun, LogOut, Trash2, Settings } from 'lucide-react';
 import TransactionForm from './components/TransactionForm';
 import TransactionList from './components/TransactionList';
 import Summary from './components/Summary';
@@ -7,7 +7,6 @@ import ClosureModal from './components/ClosureModal';
 import ClearDataModal from './components/ClearDataModal';
 import PlanningModal from './components/PlanningModal';
 import PlanningProgress from './components/PlanningProgress';
-import Auth from './components/Auth';
 import NavMenu from './components/NavMenu';
 import { Transaction, TransactionType } from './types';
 import { motion } from 'motion/react';
@@ -23,8 +22,6 @@ export default function App() {
   const [isClosureModalOpen, setIsClosureModalOpen] = useState(false);
   const [isClearDataModalOpen, setIsClearDataModalOpen] = useState(false);
   const [isPlanningModalOpen, setIsPlanningModalOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
   const [planning, setPlanning] = useState({ budget_limit: 0, savings_goal: 0 });
   const [isDarkMode, setIsDarkMode] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -35,41 +32,9 @@ export default function App() {
   });
 
   useEffect(() => {
-    checkAuth();
-  }, []);
-
-  const checkAuth = async () => {
-    try {
-      const response = await fetch('/api/auth/me');
-      if (response.ok) {
-        const userData = await response.json();
-        setUser(userData);
-        fetchTransactions();
-        fetchPlanning();
-      }
-    } catch (error) {
-      console.error('Auth check failed:', error);
-    } finally {
-      setIsCheckingAuth(false);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      setUser(null);
-      setTransactions([]);
-      setPlanning({ budget_limit: 0, savings_goal: 0 });
-    } catch (error) {
-      console.error('Logout failed:', error);
-    }
-  };
-
-  const handleLogin = (userData: any) => {
-    setUser(userData);
     fetchTransactions();
     fetchPlanning();
-  };
+  }, []);
 
   const fetchPlanning = async () => {
     const currentMonth = new Date().toISOString().substring(0, 7); // YYYY-MM
@@ -263,18 +228,6 @@ export default function App() {
     }
   };
 
-  if (isCheckingAuth) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-50 dark:bg-black">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Auth onLogin={handleLogin} />;
-  }
-
   return (
     <div className="min-h-screen pb-12 transition-colors duration-300">
       {/* Header */}
@@ -309,8 +262,8 @@ export default function App() {
               </a>
 
               <NavMenu 
-                label={user.full_name.split(' ')[0]} 
-                icon={UserCircle} 
+                label="Ações" 
+                icon={Settings} 
                 items={[
                   { label: 'Planejamento', icon: PieChart, onClick: () => setIsPlanningModalOpen(true) },
                   { 
@@ -318,12 +271,6 @@ export default function App() {
                     icon: LogOut, 
                     onClick: () => setIsClosureModalOpen(true),
                     className: 'text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20'
-                  },
-                  { 
-                    label: 'Sair', 
-                    icon: LogOut, 
-                    onClick: handleLogout,
-                    className: 'text-zinc-600 dark:text-zinc-400 hover:bg-zinc-50 dark:hover:bg-zinc-900/20'
                   },
                   { 
                     label: 'Apagar Informações', 

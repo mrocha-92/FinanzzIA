@@ -165,9 +165,9 @@ async function startServer() {
   });
 
   // Protected API Routes
-  app.get("/api/planning/:month", authenticateToken, (req: any, res) => {
+  app.get("/api/planning/:month", (req: any, res) => {
     const { month } = req.params;
-    const userId = req.user.id;
+    const userId = 1; // Hardcoded for single-user mode
     try {
       let plan = db.prepare("SELECT * FROM planning WHERE month = ? AND user_id = ?").get(month, userId);
       if (!plan) {
@@ -180,9 +180,9 @@ async function startServer() {
     }
   });
 
-  app.post("/api/planning", authenticateToken, (req: any, res) => {
+  app.post("/api/planning", (req: any, res) => {
     const { month, budget_limit, savings_goal } = req.body;
-    const userId = req.user.id;
+    const userId = 1; // Hardcoded for single-user mode
     if (!month) return res.status(400).json({ error: "Month is required" });
 
     try {
@@ -201,8 +201,8 @@ async function startServer() {
     }
   });
 
-  app.get("/api/transactions", authenticateToken, (req: any, res) => {
-    const userId = req.user.id;
+  app.get("/api/transactions", (req: any, res) => {
+    const userId = 1; // Hardcoded for single-user mode
     try {
       const transactions = db.prepare("SELECT * FROM transactions WHERE user_id = ? ORDER BY date DESC, id DESC").all(userId);
       res.json(transactions);
@@ -211,9 +211,9 @@ async function startServer() {
     }
   });
 
-  app.post("/api/transactions", authenticateToken, (req: any, res) => {
+  app.post("/api/transactions", (req: any, res) => {
     const { description, amount, type, date } = req.body;
-    const userId = req.user.id;
+    const userId = 1; // Hardcoded for single-user mode
     if (!description || !amount || !type || !date) {
       return res.status(400).json({ error: "Missing required fields" });
     }
@@ -230,8 +230,8 @@ async function startServer() {
     }
   });
 
-  app.delete("/api/transactions", authenticateToken, (req: any, res) => {
-    const userId = req.user.id;
+  app.delete("/api/transactions", (req: any, res) => {
+    const userId = 1; // Hardcoded for single-user mode
     try {
       db.prepare("DELETE FROM transactions WHERE user_id = ?").run(userId);
       res.status(204).send();
@@ -240,9 +240,9 @@ async function startServer() {
     }
   });
 
-  app.delete("/api/transactions/:id", authenticateToken, (req: any, res) => {
+  app.delete("/api/transactions/:id", (req: any, res) => {
     const { id } = req.params;
-    const userId = req.user.id;
+    const userId = 1; // Hardcoded for single-user mode
     try {
       db.prepare("DELETE FROM transactions WHERE id = ? AND user_id = ?").run(id, userId);
       res.status(204).send();
@@ -251,9 +251,9 @@ async function startServer() {
     }
   });
 
-  app.put("/api/transactions/:id", authenticateToken, (req: any, res) => {
+  app.put("/api/transactions/:id", (req: any, res) => {
     const { id } = req.params;
-    const userId = req.user.id;
+    const userId = 1; // Hardcoded for single-user mode
     const { description, amount, type, date } = req.body;
     
     if (!description || !amount || !type || !date) {
