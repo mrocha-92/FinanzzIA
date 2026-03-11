@@ -143,7 +143,7 @@ export default function App() {
     // 1. Export Data
     if (format === 'pdf') {
       const doc = new jsPDF();
-      doc.text('Relatório Financeiro - FinanzzIA', 14, 15);
+      doc.text('Relatório Financeiro - Controles Financeiros', 14, 15);
       doc.text(`Data do Fechamento: ${new Date().toLocaleDateString('pt-BR')}`, 14, 25);
       
       const tableData = transactions.map(t => [
@@ -214,7 +214,7 @@ export default function App() {
               <div className="w-8 h-8 bg-emerald-600 rounded-lg flex items-center justify-center">
                 <TrendingUp className="w-5 h-5 text-white" />
               </div>
-              <h1 className="text-xl font-bold tracking-tight dark:text-white">Finanzz<span className="text-emerald-600">IA</span></h1>
+              <h1 className="text-xl font-bold tracking-tight dark:text-white">Controles <span className="text-emerald-600">Financeiros</span></h1>
             </div>
             <div className="hidden lg:block h-4 w-px bg-zinc-200 dark:bg-zinc-800 mx-2"></div>
             <span className="hidden lg:block text-xs font-medium text-zinc-500 dark:text-zinc-400 capitalize">
